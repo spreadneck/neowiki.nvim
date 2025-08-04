@@ -5,33 +5,12 @@ local ui = require("neowiki.core.ui")
 local link = require("neowiki.core.link")
 local config = require("neowiki.config")
 local state = require("neowiki.state")
+local navigation = require("neowiki.core.navigation")
 
 local M = {}
 
----
--- Adds a new path to the navigation history.
--- This function handles truncation of "forward" history if a new path is
--- visited after navigating back.
--- @param path (string): The absolute path of the page to add to the history.
-local function add_to_history(path)
-  if not path or path == "" then
-    return
-  end
-
-  -- If the cursor is pointing to the same path, do nothing.
-  if state.history_cursor > 0 and state.navigation_history[state.history_cursor] == path then
-    return
-  end
-
-  -- If we've navigated back and are now opening a new link,
-  -- truncate the "forward" part of the history.
-  if state.history_cursor > 0 and state.history_cursor < #state.navigation_history then
-    state.navigation_history = vim.list_slice(state.navigation_history, 1, state.history_cursor)
-  end
-
-  table.insert(state.navigation_history, path)
-  state.history_cursor = #state.navigation_history
-end
+M.add_to_history = navigation.add_to_history
+M.open_file = navigation.open_file
 
 ---
 -- Initializes the navigation history with the given path if the history is empty.
@@ -39,7 +18,7 @@ end
 --
 M.initialize_history_if_needed = function(path)
   if #state.navigation_history == 0 then
-    add_to_history(path)
+    navigation.add_to_history(path)
   end
 end
 
@@ -57,42 +36,6 @@ M.check_in_neowiki = function()
     return false
   else
     return true
-  end
-end
-
----
--- Opens a file at a given path. If the file is already open in a window,
--- it jumps to that window. Otherwise, it opens the file in the current window
--- or via a specified command (e.g., 'vsplit').
--- @param full_path (string): The absolute path to the file.
--- @param open_cmd (string|nil): Optional vim command to open the file (e.g., "vsplit", "tabnew", "float").
---
-local open_file = function(full_path, open_cmd)
-  local abs_path = vim.fn.fnamemodify(full_path, ":p")
-  local buffer_number = vim.fn.bufnr(abs_path, true)
-
-  if open_cmd == "float" then
-    -- reusing the existing floating window for new file
-    ui.open_file_in_float(buffer_number)
-    return
-  end
-
-  -- If buffer is already open and visible, jump to its window.
-  if buffer_number ~= -1 then
-    local win_nr = vim.fn.bufwinnr(buffer_number)
-    if win_nr ~= -1 then
-      local win_id = vim.fn.win_getid(win_nr)
-      vim.api.nvim_set_current_win(win_id)
-      return
-    end
-  end
-
-  -- Open the file using the specified command or in the current window.
-  if open_cmd and type(open_cmd) == "string" and #open_cmd > 0 then
-    vim.cmd(open_cmd .. " " .. vim.fn.fnameescape(full_path))
-  else
-    local bn_to_open = vim.fn.bufnr(full_path, true)
-    vim.api.nvim_win_set_buf(0, bn_to_open)
   end
 end
 
@@ -152,14 +95,14 @@ M.follow_link = function(open_cmd)
     end
 
     local full_path = util.join_path(active_path, filename)
-    add_to_history(full_path)
+    navigation.add_to_history(full_path)
 
     -- reuse the current floating window to open the new link.
     if util.is_float() and not open_cmd then
       local bn_to_open = vim.fn.bufnr(full_path, true)
       vim.api.nvim_win_set_buf(0, bn_to_open)
     else
-      open_file(full_path, open_cmd)
+      navigation.open_file(full_path, open_cmd)
     end
   else
     vim.notify("No link under cursor.", vim.log.levels.WARN, { title = "neowiki" })
@@ -196,8 +139,8 @@ M.jump_to_index = function()
           return
         end
       end
-      add_to_history(index_path)
-      open_file(index_path)
+      navigation.add_to_history(index_path)
+      navigation.open_file(index_path)
       vim.b[0].wiki_root = root
       vim.b[0].active_wiki_path = active_wiki_path
       vim.b[0].ultimate_wiki_root = ultimate_wiki_root
@@ -206,8 +149,8 @@ M.jump_to_index = function()
   end
 
   local index_path = util.join_path(root, config.index_file)
-  add_to_history(index_path)
-  open_file(index_path)
+  navigation.add_to_history(index_path)
+  navigation.open_file(index_path)
 end
 
 ---
@@ -276,9 +219,9 @@ M.create_page_from_filename = function(filename, open_cmd)
     end
   end
 
-  add_to_history(full_path)
+  navigation.add_to_history(full_path)
   -- Use the existing open_file action to handle opening in different ways.
-  open_file(full_path, open_cmd)
+  navigation.open_file(full_path, open_cmd)
 end
 
 ---
@@ -303,8 +246,8 @@ M.open_wiki_index = function(name, open_cmd)
     util.ensure_path_exists(resolved_path)
     local wiki_index_path = vim.fs.joinpath(resolved_path, config.index_file)
 
-    add_to_history(wiki_index_path)
-    open_file(wiki_index_path, open_cmd)
+    navigation.add_to_history(wiki_index_path)
+    navigation.open_file(wiki_index_path, open_cmd)
   end
 
   if config.wiki_dirs and #config.wiki_dirs > 0 then
@@ -732,7 +675,7 @@ M.navigate_back = function()
 
     if vim.fn.filereadable(path_to_open) == 1 then
       state.history_cursor = target_cursor
-      open_file(path_to_open)
+      navigation.open_file(path_to_open)
     else
       vim.notify(
         "History entry not found, removing: " .. vim.fn.fnamemodify(path_to_open, ":~"),
@@ -762,7 +705,7 @@ M.navigate_forward = function()
 
     if vim.fn.filereadable(path_to_open) == 1 then
       state.history_cursor = target_cursor
-      open_file(path_to_open)
+      navigation.open_file(path_to_open)
     else
       vim.notify(
         "History entry not found, removing: " .. vim.fn.fnamemodify(path_to_open, ":~"),
