@@ -76,7 +76,7 @@ M.open_today = function()
   local today = os.date(diary_cfg.date_format)
   local ext = state.markdown_extension or ".md"
   local diary_path = util.join_path(diary_dir, today .. ext)
-
+  local created = false
   if vim.fn.filereadable(diary_path) == 0 then
     local ok, err = pcall(function()
       local f = assert(io.open(diary_path, "w"), "Failed to create diary file.")
@@ -88,6 +88,11 @@ M.open_today = function()
       vim.notify("Error creating diary file: " .. err, vim.log.levels.ERROR, { title = "neowiki" })
       return
     end
+    created = true
+  end
+
+  if created and diary_cfg.auto_update_index then
+    M.update_index()
   end
 
   navigation.add_to_history(diary_path)

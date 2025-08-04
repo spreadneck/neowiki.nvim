@@ -27,7 +27,7 @@
   Manage multiple wikis (e.g., work, personal) with automatic discovery of nested `index.md` files. Easily insert, rename, or delete wiki pages with automatic backlink updates.
 
 - **Diary Notes** 📅
-  Jump to today's entry, browse an index, or regenerate it with dedicated diary commands.
+  Jump to today's entry, browse an index, or regenerate it with dedicated diary commands. Optionally auto-update the diary index when creating new entries via `diary.auto_update_index`.
   
   Diary files live in a sibling `diary/` directory alongside your wiki (e.g. `personal/wiki` and `personal/diary`).
   
@@ -178,6 +178,8 @@ require("neowiki").setup({
     header = "Diary",
     date_format = "%Y-%m-%d",
     entry_header_format = "%a %b %d %Y",
+    -- Automatically update the diary index after creating a new entry.
+    auto_update_index = false,
   },
 
   -- Defines the keymaps used by neowiki.

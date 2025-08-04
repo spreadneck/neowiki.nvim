@@ -37,6 +37,8 @@ local config = {
     date_format = "%Y-%m-%d",
     -- Format for the first line of new diary entries.
     entry_header_format = "%a %b %d %Y",
+    -- Automatically update the diary index after creating a new entry.
+    auto_update_index = false,
   },
 
   -- Defines the keymaps used by neowiki.
