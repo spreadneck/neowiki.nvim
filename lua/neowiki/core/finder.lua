@@ -162,7 +162,23 @@ M.find_wiki_for_buffer = function(buf_path)
   end
 
   if #matching_wikis == 0 then
-    return nil, nil, nil -- No matching wiki found
+    -- No direct wiki match found, check if the file is inside a diary directory
+    local diary_rel = config.diary and config.diary.rel_path
+    if diary_rel and diary_rel ~= "" then
+      for _, wiki_info in ipairs(state.processed_wiki_paths) do
+        local parent_dir = vim.fn.fnamemodify(wiki_info.resolved, ":h")
+        local diary_dir = util.join_path(parent_dir, diary_rel)
+        local normalized_diary = util.normalize_path_for_comparison(diary_dir)
+        if not normalized_diary:find("/$") then
+          normalized_diary = normalized_diary .. "/"
+        end
+        if normalized_current_path:find(normalized_diary, 1, true) == 1 then
+          local root = wiki_info.resolved
+          return root, root, root
+        end
+      end
+    end
+    return nil, nil, nil -- No matching wiki or diary found
   end
 
   -- The list is pre-sorted by path length (desc), so the first match is the most specific.
