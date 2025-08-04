@@ -4,6 +4,7 @@ local finder = require("neowiki.core.finder")
 local actions = require("neowiki.core.actions")
 local ui = require("neowiki.core.ui")
 local keymaps = require("neowiki.keymaps")
+local diary = require("neowiki.features.diary")
 
 local M = {}
 
@@ -169,6 +170,27 @@ M.navigate_forward = function()
     return
   end
   actions.navigate_forward()
+end
+
+---
+-- Opens today's diary entry.
+--
+M.open_diary_today = function()
+  diary.open_diary_today()
+end
+
+---
+-- Opens the diary index page.
+--
+M.open_diary_index = function()
+  diary.open_diary_index()
+end
+
+---
+-- Updates the diary index.
+--
+M.update_diary_index = function()
+  diary.update_diary_index()
 end
 
 return M

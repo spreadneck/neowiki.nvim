@@ -25,6 +25,18 @@ local config = {
   -- Note: The search is faster if `rg`, `fd`, or `git` are installed.
   discover_nested_roots = false,
 
+  -- Configuration for the diary functionality.
+  diary = {
+    -- Path relative to a wiki root where diary entries are stored.
+    rel_path = "diary",
+    -- Name of the diary index file.
+    index_file = "diary.md",
+    -- Header inserted into newly created diary entries.
+    header = "Diary",
+    -- Date format used for diary entries.
+    date_format = "%Y-%m-%d",
+  },
+
   -- Defines the keymaps used by neowiki.
   -- Setting a keymap to `false` or an empty string will disable it.
   keymaps = {
@@ -49,9 +61,16 @@ local config = {
     -- Removes all links in the current file that point to non-existent pages.
     cleanup_links = "<leader>wc",
     -- Opens a selector to find and insert a link to another wiki page.
-    insert_link = "<leader>wi",
+    insert_link = "<leader>wl",
     -- Keymap to rename the current wiki page.
     rename_page = "<leader>wr",
+
+    -- Opens today's diary entry.
+    open_diary_today = "<leader>w<leader>w",
+    -- Opens the diary index file.
+    open_diary_index = "<leader>wi",
+    -- Regenerates the diary index file.
+    update_diary_index = "<leader>w<leader>i",
 
     -- Toggles the status of a gtd item.
     -- Works on the current line in Normal mode and on the selection in Visual mode.
@@ -89,4 +108,3 @@ local config = {
 }
 
 return config
-

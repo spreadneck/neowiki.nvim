@@ -135,6 +135,15 @@ M.create_buffer_keymaps = function(buffer_number)
     navigate_forward = {
       n = { rhs = require("neowiki.api").navigate_forward, desc = "Navigate Forward" },
     },
+    open_diary_today = {
+      n = { rhs = require("neowiki.api").open_diary_today, desc = "Open Today's Diary" },
+    },
+    open_diary_index = {
+      n = { rhs = require("neowiki.api").open_diary_index, desc = "Open Diary Index" },
+    },
+    update_diary_index = {
+      n = { rhs = require("neowiki.api").update_diary_index, desc = "Update Diary Index" },
+    },
   }
 
   -- If we are in a floating window, override split actions to show a notification.
