@@ -167,6 +167,7 @@ require("neowiki").setup({
     index_file = "diary.md",
     header = "Diary",
     date_format = "%Y-%m-%d",
+    entry_header_format = "%a %b %d %Y",
   },
 
   -- Defines the keymaps used by neowiki.
@@ -324,6 +325,9 @@ Regenerates the diary index by scanning existing diary pages.
 The diary feature provides quick access to daily notes and an index of past
 entries.
 
+New entries begin with a first-level header containing the current date. The
+format can be configured via `diary.entry_header_format`.
+
 Mappings:
 - `<leader>w<leader>w` — open or create today's diary entry
 - `<leader>wi` — open the diary index
@@ -336,6 +340,7 @@ Configuration:
     index_file = "diary.md",
     header = "Diary",
     date_format = "%Y-%m-%d",
+    entry_header_format = "%a %b %d %Y",
   }
 <
 

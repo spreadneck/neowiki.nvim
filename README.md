@@ -29,6 +29,8 @@
 - **Diary Notes** 📅
   Jump to today's entry, browse an index, or regenerate it with dedicated diary commands.
 
+  Daily files begin with a human-readable date header that you can configure via `diary.entry_header_format`.
+
 - **Neovim-Powered Efficiency** ⚙️  
   Built for Neovim 0.10+, leveraging Lua for speed and seamless integration with Treesitter, markdown rendering, completion, pickers, and your existing setup.
 
@@ -172,6 +174,7 @@ require("neowiki").setup({
     index_file = "diary.md",
     header = "Diary",
     date_format = "%Y-%m-%d",
+    entry_header_format = "%a %b %d %Y",
   },
 
   -- Defines the keymaps used by neowiki.

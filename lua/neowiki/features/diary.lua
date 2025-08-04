@@ -103,7 +103,8 @@ M.open_today = function()
   if vim.fn.filereadable(diary_path) == 0 then
     local ok, err = pcall(function()
       local f = assert(io.open(diary_path, "w"), "Failed to create diary file.")
-      f:write("# " .. diary_cfg.header .. "\n\n")
+      local header = os.date(diary_cfg.entry_header_format)
+      f:write("# " .. header .. "\n\n")
       f:close()
     end)
     if not ok then
@@ -129,7 +130,7 @@ M.open_index = function()
   if vim.fn.filereadable(index_path) == 0 then
     local ok, err = pcall(function()
       local f = assert(io.open(index_path, "w"), "Failed to create diary index file.")
-      f:write("# " .. diary_cfg.header .. " Index\n\n")
+      f:write("# " .. diary_cfg.header .. "\n\n")
       f:close()
     end)
     if not ok then
@@ -185,7 +186,7 @@ M.update_index = function()
     return a > b
   end)
 
-  local lines = { "# " .. diary_cfg.header .. " Index", "" }
+  local lines = { "# " .. diary_cfg.header, "" }
   for _, year in ipairs(years) do
     table.insert(lines, "## " .. year)
     local months = {}
@@ -217,6 +218,14 @@ M.update_index = function()
   end)
   if not ok then
     vim.notify("Error writing diary index: " .. err, vim.log.levels.ERROR, { title = "neowiki" })
+    return
+  end
+
+  local bufnr = vim.fn.bufnr(index_path)
+  if bufnr > 0 and vim.api.nvim_buf_is_loaded(bufnr) then
+    vim.api.nvim_buf_call(bufnr, function()
+      vim.cmd("silent! edit!")
+    end)
   end
 end
 
