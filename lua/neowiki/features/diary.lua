@@ -5,6 +5,7 @@ local state = require("neowiki.state")
 local actions = require("neowiki.core.actions")
 
 local M = {}
+local diary_cfg = config.diary
 
 ---
 -- Adds a new path to the navigation history.
@@ -45,6 +46,27 @@ local function open_file(full_path)
   end
 end
 
+local function fmt_to_pattern(fmt)
+  local order = {}
+  local pattern = fmt:gsub("%%[Ymd]", function(spec)
+    local c = spec:sub(2)
+    table.insert(order, c)
+    if c == "Y" then
+      return "(%d%d%d%d)"
+    else
+      return "(%d%d)"
+    end
+  end)
+  return "^" .. pattern .. "$", order
+end
+
+local function format_from_parts(fmt, year, month, day)
+  local rep = { Y = year, m = month, d = day }
+  return (fmt:gsub("%%([Ymd])", function(k)
+    return rep[k]
+  end))
+end
+
 ---
 -- Resolves and ensures the diary directory for the current wiki.
 -- @return string|nil The absolute path to the diary directory or nil if outside a wiki.
@@ -58,7 +80,7 @@ local function get_diary_dir()
   if not active_wiki_path then
     return nil
   end
-  local diary_dir = util.join_path(active_wiki_path, "diary")
+  local diary_dir = util.join_path(active_wiki_path, diary_cfg.rel_path)
   util.ensure_path_exists(diary_dir)
   return diary_dir
 end
@@ -74,13 +96,14 @@ M.open_today = function()
     return
   end
 
-  local today = os.date("%Y-%m-%d")
+  local today = os.date(diary_cfg.date_format)
   local ext = state.markdown_extension or ".md"
   local diary_path = util.join_path(diary_dir, today .. ext)
 
   if vim.fn.filereadable(diary_path) == 0 then
     local ok, err = pcall(function()
       local f = assert(io.open(diary_path, "w"), "Failed to create diary file.")
+      f:write("# " .. diary_cfg.header .. "\n\n")
       f:close()
     end)
     if not ok then
@@ -102,10 +125,11 @@ M.open_index = function()
     return
   end
 
-  local index_path = util.join_path(diary_dir, config.index_file)
+  local index_path = util.join_path(diary_dir, diary_cfg.index_file)
   if vim.fn.filereadable(index_path) == 0 then
     local ok, err = pcall(function()
       local f = assert(io.open(index_path, "w"), "Failed to create diary index file.")
+      f:write("# " .. diary_cfg.header .. " Index\n\n")
       f:close()
     end)
     if not ok then
@@ -130,16 +154,25 @@ M.update_index = function()
 
   local ext = state.markdown_extension or ".md"
   local files = finder.find_wiki_pages(diary_dir, ext)
+  local pattern, order = fmt_to_pattern(diary_cfg.date_format)
 
   local entries = {}
   for _, file in ipairs(files or {}) do
     local fname = vim.fn.fnamemodify(file, ":t")
-    if fname ~= config.index_file then
-      local y, m, d = fname:match("^(%d%d%d%d)%-(%d%d)%-(%d%d)")
-      if y and m and d then
-        entries[y] = entries[y] or {}
-        entries[y][m] = entries[y][m] or {}
-        table.insert(entries[y][m], d)
+    if fname ~= diary_cfg.index_file then
+      local stem = vim.fn.fnamemodify(file, ":t:r")
+      local caps = { stem:match(pattern) }
+      if #caps == #order then
+        local parts = {}
+        for i, tok in ipairs(order) do
+          parts[tok] = caps[i]
+        end
+        local y, m, d = parts.Y, parts.m, parts.d
+        if y and m and d then
+          entries[y] = entries[y] or {}
+          entries[y][m] = entries[y][m] or {}
+          table.insert(entries[y][m], d)
+        end
       end
     end
   end
@@ -152,7 +185,7 @@ M.update_index = function()
     return a > b
   end)
 
-  local lines = { "# Diary Index", "" }
+  local lines = { "# " .. diary_cfg.header .. " Index", "" }
   for _, year in ipairs(years) do
     table.insert(lines, "## " .. year)
     local months = {}
@@ -168,7 +201,7 @@ M.update_index = function()
         return a > b
       end)
       for _, day in ipairs(entries[year][month]) do
-        local date_str = string.format("%s-%s-%s", year, month, day)
+        local date_str = format_from_parts(diary_cfg.date_format, year, month, day)
         local link = string.format("[%s](./%s%s)", date_str, date_str, ext)
         table.insert(lines, "- " .. link)
       end
@@ -176,7 +209,7 @@ M.update_index = function()
     end
   end
 
-  local index_path = util.join_path(diary_dir, config.index_file)
+  local index_path = util.join_path(diary_dir, diary_cfg.index_file)
   local ok, err = pcall(function()
     local f = assert(io.open(index_path, "w"), "Failed to write diary index.")
     f:write(table.concat(lines, "\n"))
