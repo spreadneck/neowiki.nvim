@@ -175,18 +175,24 @@ M.update_index = function()
     table.insert(lines, "")
     local months = {}
     for m, _ in pairs(entries[year]) do
-      table.insert(months, m)
+      table.insert(months, tonumber(m))
     end
     table.sort(months, function(a, b)
       return a > b
     end)
-    for _, month in ipairs(months) do
+    for _, month_num in ipairs(months) do
+      local month = string.format("%02d", month_num)
       table.insert(lines, "### " .. month_name(month))
       table.insert(lines, "")
-      table.sort(entries[year][month], function(a, b)
+      local days = {}
+      for _, d in ipairs(entries[year][month]) do
+        table.insert(days, tonumber(d))
+      end
+      table.sort(days, function(a, b)
         return a > b
       end)
-      for _, day in ipairs(entries[year][month]) do
+      for _, day_num in ipairs(days) do
+        local day = string.format("%02d", day_num)
         local date_str = format_from_parts(diary_cfg.date_format, year, month, day)
         local link = string.format("[%s](./%s%s)", date_str, date_str, ext)
         table.insert(lines, "- " .. link)
