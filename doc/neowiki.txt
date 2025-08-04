@@ -14,6 +14,7 @@ CONTENTS                                      *neowiki-contents*
 6. Configuration..............................|neowiki-configuration|
 7. Mappings...................................|neowiki-mappings|
 8. API........................................|neowiki-api|
+9. Diary......................................|neowiki-diary|
 ==============================================================================
 
 1. Introduction                               *neowiki-introduction*
@@ -49,8 +50,9 @@ Getting Things Done (GTD).
 - _Advanced Wiki Management_
   Rename or delete the current page—or the page under the cursor's link—with
   <leader>wr and <leader>wd, which automatically updates all backlinks.
-  Find and insert links with <leader>wi and clean up broken links with
-  <leader>wc.
+  Find and insert links with <leader>wl and clean up broken links with
+  <leader>wc. Open today's diary with <leader>w<leader>w and maintain an index
+  with <leader>wi and <leader>w<leader>i.
 
 - _Neovim Native_
   Harness Neovim 0.10+ with Lua speed, integrating seamlessly with
@@ -159,6 +161,16 @@ require("neowiki").setup({
   -- Automatically discover and register nested wiki roots.
   discover_nested_roots = false,
 
+  -- Configuration for the diary functionality.
+  diary = {
+    -- Subdirectory (relative to the wiki's parent directory) where diary entries are stored.
+    rel_path = "diary",
+    index_file = "diary.md",
+    header = "Diary",
+    date_format = "%Y-%m-%d",
+    entry_header_format = "%a %b %d %Y",
+  },
+
   -- Defines the keymaps used by neowiki.
   keymaps = {
     action_link = "<CR>",
@@ -173,8 +185,12 @@ require("neowiki").setup({
 
     delete_page = "<leader>wd",
     cleanup_links = "<leader>wc",
-    insert_link = "<leader>wi",
+    insert_link = "<leader>wl",
     rename_page = "<leader>wr",
+
+    open_diary_today = "<leader>w<leader>w",
+    open_diary_index = "<leader>wi",
+    update_diary_index = "<leader>w<leader>i",
 
     toggle_task = "<leader>wt",
 
@@ -234,8 +250,11 @@ directory.
 | Visual   | `<leader>wt`      | Toggle task status for selection    |
 | Normal   | `<leader>wd`      | Delete current or linked page       |
 | Normal   | `<leader>wc`      | Clean up broken links in file       |
-| Normal   | `<leader>wi`      | Find and insert a link to a page    |
+| Normal   | `<leader>wl`      | Find and insert a link to a page    |
 | Normal   | `<leader>wr`      | Rename current or linked page       |
+| Normal   | `<leader>w<leader>w` | Open today's diary entry        |
+| Normal   | `<leader>wi`      | Open the diary index                |
+| Normal   | `<leader>w<leader>i` | Regenerate the diary index       |
 | Normal   | `q`               | Close the floating window           |
 ==============================================================================
 
@@ -284,5 +303,51 @@ Usage:
 >lua
   vim.keymap.set('n', '<leader>wW', "<cmd>lua require('neowiki').open_wiki_floating()<cr>")
 <
+
+------------------------------------------------------------------------------
+*neowiki.open_diary_today()*
+
+Opens or creates today's diary entry for the current wiki.
+
+------------------------------------------------------------------------------
+*neowiki.open_diary_index()*
+
+Opens the diary index file for the current wiki.
+
+------------------------------------------------------------------------------
+*neowiki.update_diary_index()*
+
+Regenerates the diary index by scanning existing diary pages.
+
+==============================================================================
+
+9. Diary                                    *neowiki-diary*
+
+The diary feature provides quick access to daily notes and an index of past
+entries. Diary files reside in a sibling `diary/` directory next to your wiki
+content (e.g. `personal/wiki` and `personal/diary`).
+
+New entries begin with a first-level header containing the current date. The
+format can be configured via `diary.entry_header_format`.
+
+Mappings:
+- `<leader>w<leader>w` — open or create today's diary entry
+- `<leader>wi` — open the diary index
+- `<leader>w<leader>i` — rebuild the diary index
+
+Configuration:
+>lua
+  diary = {
+    -- Subdirectory (relative to the wiki's parent directory) where diary entries are stored.
+    rel_path = "diary",
+    index_file = "diary.md",
+    header = "Diary",
+    date_format = "%Y-%m-%d",
+    entry_header_format = "%a %b %d %Y",
+  }
+<
+
+See also |neowiki.open_diary_today()|, |neowiki.open_diary_index()| and
+|neowiki.update_diary_index()|.
 
 vim:tw=78:ts=8:noet:ft=help:norl:

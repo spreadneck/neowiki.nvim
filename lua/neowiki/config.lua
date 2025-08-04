@@ -27,14 +27,16 @@ local config = {
 
   -- Configuration for the diary functionality.
   diary = {
-    -- Path relative to a wiki root where diary entries are stored.
+    -- Subdirectory (relative to the wiki's parent directory) where diary entries are stored.
     rel_path = "diary",
     -- Name of the diary index file.
     index_file = "diary.md",
-    -- Header inserted into newly created diary entries.
+    -- Header used for the diary index file.
     header = "Diary",
-    -- Date format used for diary entries.
+    -- Date format used for diary entry filenames.
     date_format = "%Y-%m-%d",
+    -- Format for the first line of new diary entries.
+    entry_header_format = "%a %b %d %Y",
   },
 
   -- Defines the keymaps used by neowiki.

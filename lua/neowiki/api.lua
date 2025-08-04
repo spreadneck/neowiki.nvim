@@ -176,21 +176,21 @@ end
 -- Opens today's diary entry.
 --
 M.open_diary_today = function()
-  diary.open_diary_today()
+  diary.open_today()
 end
 
 ---
 -- Opens the diary index page.
 --
 M.open_diary_index = function()
-  diary.open_diary_index()
+  diary.open_index()
 end
 
 ---
 -- Updates the diary index.
 --
 M.update_diary_index = function()
-  diary.update_diary_index()
+  diary.update_index()
 end
 
 return M
