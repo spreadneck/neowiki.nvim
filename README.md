@@ -28,6 +28,7 @@
 
 - **Diary Notes** 📅
   Jump to today's entry, browse an index, or regenerate it with dedicated diary commands.
+  
   Daily files begin with a human-readable date header that you can configure via `diary.entry_header_format`.
 
 - **Neovim-Powered Efficiency** ⚙️  
