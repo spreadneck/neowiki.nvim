@@ -67,6 +67,14 @@ local function format_from_parts(fmt, year, month, day)
   end))
 end
 
+local function month_name(month)
+  local m = tonumber(month)
+  if not m then
+    return month
+  end
+  return os.date("%B", os.time({ year = 2000, month = m, day = 1 }))
+end
+
 ---
 -- Resolves and ensures the diary directory for the current wiki.
 -- @return string|nil The absolute path to the diary directory or nil if outside a wiki.
@@ -198,7 +206,7 @@ M.update_index = function()
       return a > b
     end)
     for _, month in ipairs(months) do
-      table.insert(lines, "### " .. month)
+      table.insert(lines, "### " .. month_name(month))
       table.insert(lines, "")
       table.sort(entries[year][month], function(a, b)
         return a > b
