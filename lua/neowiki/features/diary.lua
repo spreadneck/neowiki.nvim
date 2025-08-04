@@ -189,6 +189,7 @@ M.update_index = function()
   local lines = { "# " .. diary_cfg.header, "" }
   for _, year in ipairs(years) do
     table.insert(lines, "## " .. year)
+    table.insert(lines, "")
     local months = {}
     for m, _ in pairs(entries[year]) do
       table.insert(months, m)
@@ -198,6 +199,7 @@ M.update_index = function()
     end)
     for _, month in ipairs(months) do
       table.insert(lines, "### " .. month)
+      table.insert(lines, "")
       table.sort(entries[year][month], function(a, b)
         return a > b
       end)
