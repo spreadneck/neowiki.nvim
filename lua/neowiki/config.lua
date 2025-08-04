@@ -55,7 +55,7 @@ local config = {
     -- Navigate back and forward in Browse history
     navigate_back = "[[",
     navigate_forward = "]]",
-    -- Jumps to the index page of the current wiki.
+    -- Jumps to the index page of the current wiki or diary.
     jump_to_index = "<Backspace>",
 
     -- Deletes the current wiki page.

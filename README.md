@@ -18,7 +18,7 @@
   Open wikis your way—in the current buffer, a new tab, or a distraction-free floating window for focused note-taking.
 
 - **Effortless Linking & Navigation** 🔗  
-  Create and follow markdown links with `<CR>`, split with `<S-CR>` or `<C-CR>`, and jump between links using `<Tab>`/`<S-Tab>`. Navigate page history like a browser with `[[` and `]]`, or return to `index.md` with `<BS>`.
+  Create and follow markdown links with `<CR>`, split with `<S-CR>` or `<C-CR>`, and jump between links using `<Tab>`/`<S-Tab>`. Navigate page history like a browser with `[[` and `]]`, or return to the wiki or diary index with `<BS>`.
 
 - **Smart Task Management** ✅  
   Toggle tasks with `<leader>wt` (`[ ]` ↔ `[x]`) and track nested task progress in real-time with dynamic updates.
@@ -28,9 +28,9 @@
 
 - **Diary Notes** 📅
   Jump to today's entry, browse an index, or regenerate it with dedicated diary commands.
-
+  
   Diary files live in a sibling `diary/` directory alongside your wiki (e.g. `personal/wiki` and `personal/diary`).
-
+  
   Daily files begin with a human-readable date header that you can configure via `diary.entry_header_format`.
 
 - **Neovim-Powered Efficiency** ⚙️  
@@ -98,7 +98,7 @@ lua vim.keymap.set("n", "<leader>wT", require("neowiki").open_wiki_new_tab, { de
 2.  **Create Note**: Select text (e.g., “My Project”), press `<CR>` to create `[My Project](./My_Project.md)` and open it.
 3.  **Manage Tasks**: Use `<leader>wt` on a task line to toggle its status. Progress (e.g., `[ 75% ]`) will be displayed for parent items.
 4.  **Diary**: `<leader>w<leader>w` opens today's entry, `<leader>wi` jumps to the diary index, and `<leader>w<leader>i` regenerates it.
-5.  **Navigate**: Use `<Tab>`/`<S-Tab>` to jump between links, `<BS>` to return to the `index.md`, or `<leader>wr` to rename a page and update its links.
+5.  **Navigate**: Use `<Tab>`/`<S-Tab>` to jump between links, `<BS>` to return to the appropriate index, or `<leader>wr` to rename a page and update its links.
 6.  **Save**: Simply `:w`.
 
 ### Example Wiki Index
@@ -137,7 +137,7 @@ The following keymaps are buffer-local and only active in markdown files within 
 | Normal | `<S-Tab>`     | Previous link        | Navigate to previous link                 |
 | Normal | `[[`          | Navigate back        | Go back in browsing history               |
 | Normal | `]]`          | Navigate forward     | Go forward in browsing history            |
-| Normal | `<Backspace>` | Jump to index        | Open the current wiki’s `index.md`        |
+| Normal | `<Backspace>` | Jump to index        | Open the current wiki or diary index      |
 | Normal | `<leader>wt`  | Toggle task          | Create or toggle task status on the line  |
 | Visual | `<leader>wt`  | Toggle tasks         | Bulk create or toggle tasks in selection  |
 | Normal | `<leader>wd`  | Delete page          | Delete current or linked page             |
@@ -196,7 +196,7 @@ require("neowiki").setup({
     -- Navigate back and forth in history.
     navigate_back = "[[",
     navigate_forward = "]]",
-    -- Jumps to the index page of the current wiki.
+    -- Jumps to the index page of the current wiki or diary.
     jump_to_index = "<Backspace>",
 
     -- Deletes the current wiki page and updates backlinks.

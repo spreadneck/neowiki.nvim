@@ -32,8 +32,8 @@ Getting Things Done (GTD).
 
 - _Seamless Linking & Page Navigation_
   Create and follow markdown links with <CR>, split with <S-CR> or <C-CR>.
-  Jump between links with <Tab>/<S-Tab> and jump to the wiki index with
-  <Backspace>.
+  Jump between links with <Tab>/<S-Tab> and jump to the wiki or diary index
+  with <Backspace>.
 
 - _Browse History_
   Navigate back and forth through your visited pages like a web browser using
@@ -245,7 +245,7 @@ directory.
 | Normal   | `<S-Tab>`         | Jump to the previous link           |
 | Normal   | `[[`              | Navigate back in history            |
 | Normal   | `]]`              | Navigate forward in history         |
-| Normal   | `<Backspace>`     | Jump to the current wiki's index    |
+| Normal   | `<Backspace>`     | Jump to the current wiki or diary index |
 | Normal   | `<leader>wt`      | Toggle task status on current line  |
 | Visual   | `<leader>wt`      | Toggle task status for selection    |
 | Normal   | `<leader>wd`      | Delete current or linked page       |

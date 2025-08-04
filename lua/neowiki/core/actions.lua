@@ -170,7 +170,41 @@ end
 -- Jumps to the config.index_file of the wiki that the current buffer belongs to.
 --
 M.jump_to_index = function()
-  local root = vim.b[0].wiki_root
+  local bufnr = vim.api.nvim_get_current_buf()
+  local root = vim.b[bufnr].wiki_root
+  local active_wiki_path = vim.b[bufnr].active_wiki_path
+  local ultimate_wiki_root = vim.b[bufnr].ultimate_wiki_root
+  local buf_path = vim.api.nvim_buf_get_name(bufnr)
+
+  local diary_cfg = config.diary
+  if diary_cfg then
+    local diary_dir = util.join_path(vim.fn.fnamemodify(root, ":h"), diary_cfg.rel_path)
+    if buf_path:sub(1, #diary_dir + 1) == diary_dir .. "/" then
+      local index_path = util.join_path(diary_dir, diary_cfg.index_file)
+      if vim.fn.filereadable(index_path) == 0 then
+        local ok, err = pcall(function()
+          local f = assert(io.open(index_path, "w"), "Failed to create diary index file.")
+          f:write("# " .. diary_cfg.header .. "\n\n")
+          f:close()
+        end)
+        if not ok then
+          vim.notify(
+            "Error creating diary index: " .. err,
+            vim.log.levels.ERROR,
+            { title = "neowiki" }
+          )
+          return
+        end
+      end
+      add_to_history(index_path)
+      open_file(index_path)
+      vim.b[0].wiki_root = root
+      vim.b[0].active_wiki_path = active_wiki_path
+      vim.b[0].ultimate_wiki_root = ultimate_wiki_root
+      return
+    end
+  end
+
   local index_path = util.join_path(root, config.index_file)
   add_to_history(index_path)
   open_file(index_path)
