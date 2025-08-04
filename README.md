@@ -23,8 +23,11 @@
 - **Smart Task Management** ✅  
   Toggle tasks with `<leader>wt` (`[ ]` ↔ `[x]`) and track nested task progress in real-time with dynamic updates.
 
-- **Robust Wiki Organization** 📂  
+- **Robust Wiki Organization** 📂
   Manage multiple wikis (e.g., work, personal) with automatic discovery of nested `index.md` files. Easily insert, rename, or delete wiki pages with automatic backlink updates.
+
+- **Diary Notes** 📅
+  Jump to today's entry, browse an index, or regenerate it with dedicated diary commands.
 
 - **Neovim-Powered Efficiency** ⚙️  
   Built for Neovim 0.10+, leveraging Lua for speed and seamless integration with Treesitter, markdown rendering, completion, pickers, and your existing setup.
@@ -90,8 +93,9 @@ lua vim.keymap.set("n", "<leader>wT", require("neowiki").open_wiki_new_tab, { de
 1.  **Open Wiki**: Use `<leader>ww`, `<leader>wW`, or `<leader>wT` to start.
 2.  **Create Note**: Select text (e.g., “My Project”), press `<CR>` to create `[My Project](./My_Project.md)` and open it.
 3.  **Manage Tasks**: Use `<leader>wt` on a task line to toggle its status. Progress (e.g., `[ 75% ]`) will be displayed for parent items.
-4.  **Navigate**: Use `<Tab>`/`<S-Tab>` to jump between links, `<BS>` to return to the `index.md`, or `<leader>wr` to rename a page and update its links.
-5.  **Save**: Simply `:w`.
+4.  **Diary**: `<leader>w<leader>w` opens today's entry, `<leader>wi` jumps to the diary index, and `<leader>w<leader>i` regenerates it.
+5.  **Navigate**: Use `<Tab>`/`<S-Tab>` to jump between links, `<BS>` to return to the `index.md`, or `<leader>wr` to rename a page and update its links.
+6.  **Save**: Simply `:w`.
 
 ### Example Wiki Index
 ```markdown
@@ -134,8 +138,11 @@ The following keymaps are buffer-local and only active in markdown files within 
 | Visual | `<leader>wt`  | Toggle tasks         | Bulk create or toggle tasks in selection  |
 | Normal | `<leader>wd`  | Delete page          | Delete current or linked page             |
 | Normal | `<leader>wr`  | Rename page          | Rename current or linked page             |
-| Normal | `<leader>wi`  | Insert link          | Find and insert a link to a wiki page     |
+| Normal | `<leader>wl`  | Insert link          | Find and insert a link to a wiki page     |
 | Normal | `<leader>wc`  | Clean broken links   | Remove broken links from the current page |
+| Normal | `<leader>w<leader>w` | Open today's diary | Create or open today's diary note |
+| Normal | `<leader>wi`  | Diary index          | Open the diary index                      |
+| Normal | `<leader>w<leader>i` | Update diary index | Regenerate the diary index            |
 | Normal | `q`           | Close float          | Close the floating wiki window            |
 ## ⚙️ Default Configuration
 
@@ -159,6 +166,14 @@ require("neowiki").setup({
   -- Automatically discover and register nested wiki roots.
   discover_nested_roots = false,
 
+  -- Configuration for the diary functionality.
+  diary = {
+    rel_path = "diary",
+    index_file = "diary.md",
+    header = "Diary",
+    date_format = "%Y-%m-%d",
+  },
+
   -- Defines the keymaps used by neowiki.
   -- Setting a keymap to `false` or an empty string will disable it.
   keymaps = {
@@ -178,14 +193,21 @@ require("neowiki").setup({
     -- Jumps to the index page of the current wiki.
     jump_to_index = "<Backspace>",
 
-    -- Renames the current wiki page and updates backlinks.
-    rename_page = "<leader>wr",
     -- Deletes the current wiki page and updates backlinks.
     delete_page = "<leader>wd",
-    -- Inserts a link to another wiki page.
-    insert_link = "<leader>wi",
     -- Removes all links in the current file that point to non-existent pages.
     cleanup_links = "<leader>wc",
+    -- Inserts a link to another wiki page.
+    insert_link = "<leader>wl",
+    -- Keymap to rename the current wiki page.
+    rename_page = "<leader>wr",
+
+    -- Opens today's diary entry.
+    open_diary_today = "<leader>w<leader>w",
+    -- Opens the diary index file.
+    open_diary_index = "<leader>wi",
+    -- Regenerates the diary index file.
+    update_diary_index = "<leader>w<leader>i",
 
     -- Toggles the status of a gtd item.
     -- Works on the current line in Normal mode and on the selection in Visual mode.
@@ -231,8 +253,17 @@ The following functions are exposed for use in custom mappings or scripts.
 -   `neowiki.open_wiki_new_tab({name})`  
     Same as `open_wiki()`, but opens in a new tab.
 
--   `neowiki.open_wiki_floating({name})`  
+-   `neowiki.open_wiki_floating({name})`
     Same as `open_wiki()`, but opens in a floating window.
+
+-   `neowiki.open_diary_today()`
+    Opens or creates today's diary note for the current wiki.
+
+-   `neowiki.open_diary_index()`
+    Opens the diary index file.
+
+-   `neowiki.update_diary_index()`
+    Regenerates the diary index by scanning diary entries.
 
 ### Custom Keymap Example
 ```lua
@@ -258,3 +289,4 @@ Big thanks to **kiwi.nvim** by [serenevoid](https://github.com/serenevoid/kiwi.n
 ## 📜 License
 
 [MIT License](./LICENSE)
+
