@@ -28,7 +28,9 @@
 
 - **Diary Notes** 📅
   Jump to today's entry, browse an index, or regenerate it with dedicated diary commands.
+
   Diary files live in a sibling `diary/` directory alongside your wiki (e.g. `personal/wiki` and `personal/diary`).
+
   Daily files begin with a human-readable date header that you can configure via `diary.entry_header_format`.
 
 - **Neovim-Powered Efficiency** ⚙️  
