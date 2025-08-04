@@ -77,20 +77,27 @@ end
 
 ---
 -- Resolves and ensures the diary directory for the current wiki.
--- @return string|nil The absolute path to the diary directory or nil if outside a wiki.
+-- @return string|nil, string|nil, string|nil, string|nil
+--   - The absolute path to the diary directory or nil if outside a wiki.
+--   - The wiki_root of the calling buffer.
+--   - The active_wiki_path of the calling buffer.
+--   - The ultimate_wiki_root of the calling buffer.
 --
 local function get_diary_dir()
   if not actions.check_in_neowiki() then
     return nil
   end
   local bufnr = vim.api.nvim_get_current_buf()
+  local wiki_root = vim.b[bufnr].wiki_root
   local active_wiki_path = vim.b[bufnr].active_wiki_path
-  if not active_wiki_path then
+  local ultimate_wiki_root = vim.b[bufnr].ultimate_wiki_root
+  if not active_wiki_path or not wiki_root then
     return nil
   end
-  local diary_dir = util.join_path(active_wiki_path, diary_cfg.rel_path)
+  local parent = vim.fn.fnamemodify(wiki_root, ":h")
+  local diary_dir = util.join_path(parent, diary_cfg.rel_path)
   util.ensure_path_exists(diary_dir)
-  return diary_dir
+  return diary_dir, wiki_root, active_wiki_path, ultimate_wiki_root
 end
 
 ---
@@ -99,7 +106,7 @@ end
 -- then opens it and records it in the navigation history.
 --
 M.open_today = function()
-  local diary_dir = get_diary_dir()
+  local diary_dir, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
   if not diary_dir then
     return
   end
@@ -123,13 +130,16 @@ M.open_today = function()
 
   add_to_history(diary_path)
   open_file(diary_path)
+  vim.b[0].wiki_root = wiki_root
+  vim.b[0].active_wiki_path = active_wiki_path
+  vim.b[0].ultimate_wiki_root = ultimate_wiki_root
 end
 
 ---
 -- Opens or creates the diary index file.
 --
 M.open_index = function()
-  local diary_dir = get_diary_dir()
+  local diary_dir, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
   if not diary_dir then
     return
   end
@@ -149,6 +159,9 @@ M.open_index = function()
 
   add_to_history(index_path)
   open_file(index_path)
+  vim.b[0].wiki_root = wiki_root
+  vim.b[0].active_wiki_path = active_wiki_path
+  vim.b[0].ultimate_wiki_root = ultimate_wiki_root
 end
 
 ---
