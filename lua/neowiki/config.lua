@@ -35,8 +35,12 @@ local config = {
     header = "Diary",
     -- Date format used for diary entry filenames.
     date_format = "%Y-%m-%d",
-    -- Format for the first line of new diary entries.
+    -- Format for the first line of new diary entries when no template is provided.
     entry_header_format = "%a %b %d %Y",
+    -- Template for new diary entries. Strings are processed with os.date().
+    -- Can also be a function returning a string.
+    -- Defaults to a header based on entry_header_format.
+    entry_template = nil,
     -- Automatically update the diary index after creating a new entry.
     auto_update_index = false,
   },

@@ -81,8 +81,16 @@ M.open_today = function()
   if vim.fn.filereadable(diary_path) == 0 then
     local ok, err = pcall(function()
       local f = assert(io.open(diary_path, "w"), "Failed to create diary file.")
-      local header = os.date(diary_cfg.entry_header_format)
-      f:write("# " .. header .. "\n\n")
+      local content
+      if type(diary_cfg.entry_template) == "function" then
+        content = diary_cfg.entry_template()
+      elseif type(diary_cfg.entry_template) == "string" then
+        content = os.date(diary_cfg.entry_template)
+      else
+        local header = os.date(diary_cfg.entry_header_format)
+        content = "# " .. header .. "\n\n"
+      end
+      f:write(content)
       f:close()
     end)
     if not ok then
