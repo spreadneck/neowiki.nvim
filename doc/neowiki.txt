@@ -31,7 +31,7 @@ Getting Things Done (GTD).
   window for distraction-free note-taking.
 
 - _Seamless Linking & Page Navigation_
-  Create and follow markdown links with <CR>, split with <S-CR> or <C-CR>.
+  Create and follow markdown links and footnote references with <CR>, split with <S-CR> or <C-CR>.
   Jump between links with <Tab>/<S-Tab> and jump to the wiki or diary index
   with <Backspace>.
 

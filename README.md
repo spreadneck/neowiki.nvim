@@ -17,8 +17,8 @@
 - **Flexible Wiki Access** 🪟  
   Open wikis your way—in the current buffer, a new tab, or a distraction-free floating window for focused note-taking.
 
-- **Effortless Linking & Navigation** 🔗  
-  Create and follow markdown links with `<CR>`, split with `<S-CR>` or `<C-CR>`, and jump between links using `<Tab>`/`<S-Tab>`. Navigate page history like a browser with `[[` and `]]`, or return to the wiki or diary index with `<BS>`.
+- **Effortless Linking & Navigation** 🔗
+  Create and follow markdown links and footnote references with `<CR>`, split with `<S-CR>` or `<C-CR>`, and jump between links using `<Tab>`/`<S-Tab>`. Navigate page history like a browser with `[[` and `]]`, or return to the wiki or diary index with `<BS>`.
 
 - **Smart Task Management** ✅  
   Toggle tasks with `<leader>wt` (`[ ]` ↔ `[x]`) and track nested task progress in real-time with dynamic updates.
