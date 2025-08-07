@@ -1,3 +1,5 @@
+--- Diary utilities and helpers for working with dated entries.
+--- Supported date format specifiers: %Y, %m, %d, %B, %b, %j.
 local util = require("neowiki.util")
 local finder = require("neowiki.core.finder")
 local config = require("neowiki.config")
@@ -10,21 +12,35 @@ local diary_cfg = config.diary
 
 local function fmt_to_pattern(fmt)
   local order = {}
-  local pattern = fmt:gsub("%%[Ymd]", function(spec)
-    local c = spec:sub(2)
+  local patterns = {
+    Y = "(%d%d%d%d)",
+    m = "(%d%d)",
+    d = "(%d%d)",
+    B = "([%a]+)",
+    b = "([%a]+)",
+    j = "(%d%d%d)",
+  }
+  local pattern = fmt:gsub("%%([YmdBbj])", function(c)
     table.insert(order, c)
-    if c == "Y" then
-      return "(%d%d%d%d)"
-    else
-      return "(%d%d)"
-    end
+    return patterns[c]
   end)
   return "^" .. pattern .. "$", order
 end
 
 local function format_from_parts(fmt, year, month, day)
-  local rep = { Y = year, m = month, d = day }
-  return (fmt:gsub("%%([Ymd])", function(k)
+  local y = tonumber(year)
+  local m = tonumber(month)
+  local d = tonumber(day)
+  local base = os.time({ year = y, month = m, day = d })
+  local rep = {
+    Y = year,
+    m = month,
+    d = day,
+    B = os.date("%B", base),
+    b = os.date("%b", base),
+    j = os.date("%j", base),
+  }
+  return (fmt:gsub("%%([YmdBbj])", function(k)
     return rep[k]
   end))
 end
@@ -35,6 +51,17 @@ local function month_name(month)
     return month
   end
   return os.date("%B", os.time({ year = 2000, month = m, day = 1 }))
+end
+
+local month_lookup = {}
+for i = 1, 12 do
+  local t = os.time({ year = 2000, month = i, day = 1 })
+  month_lookup[os.date("%B", t):lower()] = string.format("%02d", i)
+  month_lookup[os.date("%b", t):lower()] = string.format("%02d", i)
+end
+
+local function month_number(name)
+  return month_lookup[name:lower()]
 end
 
 ---
@@ -156,7 +183,27 @@ M.update_index = function()
         for i, tok in ipairs(order) do
           parts[tok] = caps[i]
         end
-        local y, m, d = parts.Y, parts.m, parts.d
+        local y = parts.Y
+        local m = parts.m
+        local d = parts.d
+        if not m then
+          local name = parts.B or parts.b
+          if name then
+            m = month_number(name)
+          end
+        end
+        if not d and parts.j then
+          local ynum = tonumber(y) or 2000
+          local day_of_year = tonumber(parts.j)
+          if day_of_year then
+            local t = os.date(
+              "*t",
+              os.time({ year = ynum, month = 1, day = 1 }) + (day_of_year - 1) * 24 * 60 * 60
+            )
+            m = m or string.format("%02d", t.month)
+            d = string.format("%02d", t.day)
+          end
+        end
         if y and m and d then
           entries[y] = entries[y] or {}
           entries[y][m] = entries[y][m] or {}
