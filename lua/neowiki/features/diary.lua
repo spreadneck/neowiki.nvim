@@ -7,6 +7,7 @@ local navigation = require("neowiki.core.navigation")
 
 local M = {}
 local diary_cfg = config.diary
+local update_job = nil
 
 local function fmt_to_pattern(fmt)
   local order = {}
@@ -132,20 +133,13 @@ M.open_index = function()
 end
 
 ---
--- Generates a diary index by scanning diary entries and grouping them by year and month.
--- The index is written to the diary's index file.
+-- Internal function used by a headless job to collect diary entry metadata.
+-- It prints a JSON array of {y, m, d} tables to stdout.
 --
-M.update_index = function()
-  local diary_dir = get_diary_dir()
-  if not diary_dir then
-    return
-  end
-
-  local ext = state.markdown_extension or ".md"
-  local files = finder.find_wiki_pages(diary_dir, ext)
-  local pattern, order = fmt_to_pattern(diary_cfg.date_format)
-
-  local entries = {}
+M._collect_entries = function(dir, ext, date_fmt)
+  local pattern, order = fmt_to_pattern(date_fmt)
+  local files = finder.find_wiki_pages(dir, ext)
+  local results = {}
   for _, file in ipairs(files or {}) do
     local fname = vim.fn.fnamemodify(file, ":t")
     if fname ~= diary_cfg.index_file then
@@ -158,71 +152,152 @@ M.update_index = function()
         end
         local y, m, d = parts.Y, parts.m, parts.d
         if y and m and d then
-          entries[y] = entries[y] or {}
-          entries[y][m] = entries[y][m] or {}
-          table.insert(entries[y][m], d)
+          table.insert(results, { y = y, m = m, d = d })
         end
       end
     end
   end
+  io.stdout:write(vim.fn.json_encode(results))
+end
 
-  local years = {}
-  for y, _ in pairs(entries) do
-    table.insert(years, y)
+---
+-- Generates a diary index by scanning diary entries and grouping them by year and month.
+-- File discovery and parsing are run in a background job.
+--
+M.update_index = function()
+  local diary_dir = get_diary_dir()
+  if not diary_dir then
+    return
   end
-  table.sort(years, function(a, b)
-    return a > b
-  end)
-
-  local lines = { "# " .. diary_cfg.header, "" }
-  for _, year in ipairs(years) do
-    table.insert(lines, "## " .. year)
-    table.insert(lines, "")
-    local months = {}
-    for m, _ in pairs(entries[year]) do
-      table.insert(months, tonumber(m))
-    end
-    table.sort(months, function(a, b)
-      return a > b
-    end)
-    for _, month_num in ipairs(months) do
-      local month = string.format("%02d", month_num)
-      table.insert(lines, "### " .. month_name(month))
-      table.insert(lines, "")
-      local days = {}
-      for _, d in ipairs(entries[year][month]) do
-        table.insert(days, tonumber(d))
-      end
-      table.sort(days, function(a, b)
-        return a > b
-      end)
-      for _, day_num in ipairs(days) do
-        local day = string.format("%02d", day_num)
-        local date_str = format_from_parts(diary_cfg.date_format, year, month, day)
-        local link = string.format("[%s](./%s%s)", date_str, date_str, ext)
-        table.insert(lines, "- " .. link)
-      end
-      table.insert(lines, "")
-    end
-  end
-
-  local index_path = util.join_path(diary_dir, diary_cfg.index_file)
-  local ok, err = pcall(function()
-    local f = assert(io.open(index_path, "w"), "Failed to write diary index.")
-    f:write(table.concat(lines, "\n"))
-    f:close()
-  end)
-  if not ok then
-    vim.notify("Error writing diary index: " .. err, vim.log.levels.ERROR, { title = "neowiki" })
+  if update_job then
+    vim.notify("Diary index update already running.", vim.log.levels.INFO, { title = "neowiki" })
     return
   end
 
-  local bufnr = vim.fn.bufnr(index_path)
-  if bufnr > 0 and vim.api.nvim_buf_is_loaded(bufnr) then
-    vim.api.nvim_buf_call(bufnr, function()
-      vim.cmd("silent! edit!")
-    end)
-  end
+  local ext = state.markdown_extension or ".md"
+  local runtime_root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h:h:h")
+  local cmd = {
+    vim.v.progpath,
+    "--headless",
+    "-u",
+    "NONE",
+    "--cmd",
+    "set rtp+=" .. runtime_root,
+    "-c",
+    string.format(
+      "lua require('neowiki.features.diary')._collect_entries(%q, %q, %q)",
+      diary_dir,
+      ext,
+      diary_cfg.date_format
+    ),
+    "-c",
+    "qa!",
+  }
+
+  local output = ""
+  update_job = vim.fn.jobstart(cmd, {
+    stdout_buffered = true,
+    on_stdout = function(_, data)
+      if data and #data > 0 then
+        output = output .. table.concat(data, "")
+      end
+    end,
+    on_exit = function(_, code)
+      update_job = nil
+      if code ~= 0 then
+        vim.schedule(function()
+          vim.notify(
+            "Failed to collect diary entries.",
+            vim.log.levels.ERROR,
+            { title = "neowiki" }
+          )
+        end)
+        return
+      end
+      local ok, parsed = pcall(vim.fn.json_decode, output)
+      if not ok then
+        vim.schedule(function()
+          vim.notify(
+            "Failed to parse diary entry data.",
+            vim.log.levels.ERROR,
+            { title = "neowiki" }
+          )
+        end)
+        return
+      end
+      vim.schedule(function()
+        local entries = {}
+        for _, item in ipairs(parsed or {}) do
+          local y, m, d = item.y, item.m, item.d
+          entries[y] = entries[y] or {}
+          entries[y][m] = entries[y][m] or {}
+          table.insert(entries[y][m], d)
+        end
+
+        local years = {}
+        for y, _ in pairs(entries) do
+          table.insert(years, y)
+        end
+        table.sort(years, function(a, b)
+          return a > b
+        end)
+
+        local lines = { "# " .. diary_cfg.header, "" }
+        for _, year in ipairs(years) do
+          table.insert(lines, "## " .. year)
+          table.insert(lines, "")
+          local months = {}
+          for m, _ in pairs(entries[year]) do
+            table.insert(months, tonumber(m))
+          end
+          table.sort(months, function(a, b)
+            return a > b
+          end)
+          for _, month_num in ipairs(months) do
+            local month = string.format("%02d", month_num)
+            table.insert(lines, "### " .. month_name(month))
+            table.insert(lines, "")
+            local days = {}
+            for _, d in ipairs(entries[year][month]) do
+              table.insert(days, tonumber(d))
+            end
+            table.sort(days, function(a, b)
+              return a > b
+            end)
+            for _, day_num in ipairs(days) do
+              local day = string.format("%02d", day_num)
+              local date_str = format_from_parts(diary_cfg.date_format, year, month, day)
+              local link = string.format("[%s](./%s%s)", date_str, date_str, ext)
+              table.insert(lines, "- " .. link)
+            end
+            table.insert(lines, "")
+          end
+        end
+
+        local index_path = util.join_path(diary_dir, diary_cfg.index_file)
+        local ok2, err = pcall(function()
+          local f = assert(io.open(index_path, "w"), "Failed to write diary index.")
+          f:write(table.concat(lines, "\n"))
+          f:close()
+        end)
+        if not ok2 then
+          vim.notify(
+            "Error writing diary index: " .. err,
+            vim.log.levels.ERROR,
+            { title = "neowiki" }
+          )
+          return
+        end
+
+        local bufnr = vim.fn.bufnr(index_path)
+        if bufnr > 0 and vim.api.nvim_buf_is_loaded(bufnr) then
+          vim.api.nvim_buf_call(bufnr, function()
+            vim.cmd("silent! edit!")
+          end)
+        end
+      end)
+    end,
+  })
 end
 
 return M
