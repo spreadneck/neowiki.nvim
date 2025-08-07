@@ -155,7 +155,35 @@ M.process_link = function(cursor, line, pattern_to_match)
     end
   end
 
-  -- 2. If no markdown link was found/matched, search for wikilinks: [[target]]
+  -- 2. Check for footnote references: [^id] before considering wikilinks
+  if not hungry_mode then
+    local fn_pattern = "%[%^([^%]]+)%]"
+    local search_pos = 1
+    while true do
+      local s, e, id = line:find(fn_pattern, search_pos)
+      if not s then
+        break
+      end
+      search_pos = e + 1
+      if col >= s and col <= e then
+        local def_pattern = "^%s*%[%^" .. vim.pesc(id) .. "%]:%s*(.+)"
+        local all_lines = vim.api.nvim_buf_get_lines(0, 0, -1, false)
+        for _, l in ipairs(all_lines) do
+          local content = l:match(def_pattern)
+          if content then
+            local targets = find_all_link_targets(content)
+            local target = targets[1] or util.process_link_target(content, state.markdown_extension)
+            if target then
+              return target
+            end
+            break
+          end
+        end
+      end
+    end
+  end
+
+  -- 3. If no footnote was found/matched, search for wikilinks: [[target]]
   do
     local wiki_pattern = "%[%[(.-)%]%]"
     local search_pos = 1
@@ -168,12 +196,6 @@ M.process_link = function(cursor, line, pattern_to_match)
 
       if hungry_mode then
         if target and target:find(pattern_to_match, 1, true) then
-          vim.notify(
-            "hungry_mode taget found for [[]] pattern: "
-              .. target
-              .. " pattern: "
-              .. pattern_to_match
-          )
           return util.process_link_target(target, state.markdown_extension)
         end
       elseif col >= s and col <= e then
