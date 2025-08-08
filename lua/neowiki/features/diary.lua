@@ -67,8 +67,9 @@ end
 
 ---
 -- Resolves and ensures the diary directory for the current wiki.
--- @return string|nil, string|nil, string|nil, string|nil
---   - The absolute path to the diary directory or nil if outside a wiki.
+-- @return string|nil, string|nil, string|nil, string|nil, string|nil
+--   - The absolute path to the diary root directory or nil if outside a wiki.
+--   - The absolute path to the directory containing diary entries.
 --   - The wiki_root of the calling buffer.
 --   - The active_wiki_path of the calling buffer.
 --   - The ultimate_wiki_root of the calling buffer.
@@ -87,7 +88,12 @@ local function get_diary_dir()
   local parent = vim.fn.fnamemodify(wiki_root, ":h")
   local diary_dir = util.join_path(parent, diary_cfg.rel_path)
   util.ensure_path_exists(diary_dir)
-  return diary_dir, wiki_root, active_wiki_path, ultimate_wiki_root
+  local entries_dir = diary_cfg.entries_rel_path
+      and diary_cfg.entries_rel_path ~= ""
+      and util.join_path(diary_dir, diary_cfg.entries_rel_path)
+    or diary_dir
+  util.ensure_path_exists(entries_dir)
+  return diary_dir, entries_dir, wiki_root, active_wiki_path, ultimate_wiki_root
 end
 
 ---
@@ -96,14 +102,14 @@ end
 -- then opens it and records it in the navigation history.
 --
 M.open_today = function()
-  local diary_dir, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
+  local diary_dir, entries_dir, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
   if not diary_dir then
     return
   end
 
   local today = os.date(diary_cfg.date_format)
   local ext = state.markdown_extension or ".md"
-  local diary_path = util.join_path(diary_dir, today .. ext)
+  local diary_path = util.join_path(entries_dir, today .. ext)
   local created = false
   if vim.fn.filereadable(diary_path) == 0 then
     local ok, err = pcall(function()
@@ -142,7 +148,7 @@ end
 -- Opens or creates the diary index file.
 --
 M.open_index = function()
-  local diary_dir, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
+  local diary_dir, _, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
   if not diary_dir then
     return
   end
@@ -220,7 +226,7 @@ end
 -- File discovery and parsing are run in a background job.
 --
 M.update_index = function()
-  local diary_dir = get_diary_dir()
+  local diary_dir, entries_dir = get_diary_dir()
   if not diary_dir then
     return
   end
@@ -241,7 +247,7 @@ M.update_index = function()
     "-c",
     string.format(
       "lua require('neowiki.features.diary')._collect_entries(%q, %q, %q)",
-      diary_dir,
+      entries_dir,
       ext,
       diary_cfg.date_format
     ),
@@ -322,7 +328,11 @@ M.update_index = function()
             for _, day_num in ipairs(days) do
               local day = string.format("%02d", day_num)
               local date_str = format_from_parts(diary_cfg.date_format, year, month, day)
-              local link = string.format("[%s](./%s%s)", date_str, date_str, ext)
+              local prefix = diary_cfg.entries_rel_path
+                  and diary_cfg.entries_rel_path ~= ""
+                  and (diary_cfg.entries_rel_path:gsub("/$", "") .. "/")
+                or ""
+              local link = string.format("[%s](./%s%s%s)", date_str, prefix, date_str, ext)
               table.insert(lines, "- " .. link)
             end
             table.insert(lines, "")
