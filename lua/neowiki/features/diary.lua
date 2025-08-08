@@ -8,7 +8,6 @@ local actions = require("neowiki.core.actions")
 local navigation = require("neowiki.core.navigation")
 
 local M = {}
-local diary_cfg = config.diary
 local update_job = nil
 
 local function fmt_to_pattern(fmt)
@@ -67,8 +66,9 @@ end
 
 ---
 -- Resolves and ensures the diary directory for the current wiki.
--- @return string|nil, string|nil, string|nil, string|nil
---   - The absolute path to the diary directory or nil if outside a wiki.
+-- @return string|nil, string|nil, string|nil, string|nil, string|nil
+--   - The absolute path to the diary root directory or nil if outside a wiki.
+--   - The absolute path to the directory containing diary entries.
 --   - The wiki_root of the calling buffer.
 --   - The active_wiki_path of the calling buffer.
 --   - The ultimate_wiki_root of the calling buffer.
@@ -77,6 +77,7 @@ local function get_diary_dir()
   if not actions.check_in_neowiki() then
     return nil
   end
+  local diary_cfg = config.diary
   local bufnr = vim.api.nvim_get_current_buf()
   local wiki_root = vim.b[bufnr].wiki_root
   local active_wiki_path = vim.b[bufnr].active_wiki_path
@@ -87,7 +88,12 @@ local function get_diary_dir()
   local parent = vim.fn.fnamemodify(wiki_root, ":h")
   local diary_dir = util.join_path(parent, diary_cfg.rel_path)
   util.ensure_path_exists(diary_dir)
-  return diary_dir, wiki_root, active_wiki_path, ultimate_wiki_root
+  local entries_dir = diary_cfg.entries_rel_path
+      and diary_cfg.entries_rel_path ~= ""
+      and util.join_path(diary_dir, diary_cfg.entries_rel_path)
+    or diary_dir
+  util.ensure_path_exists(entries_dir)
+  return diary_dir, entries_dir, wiki_root, active_wiki_path, ultimate_wiki_root
 end
 
 ---
@@ -96,14 +102,14 @@ end
 -- then opens it and records it in the navigation history.
 --
 M.open_today = function()
-  local diary_dir, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
+  local diary_dir, entries_dir, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
   if not diary_dir then
     return
   end
-
+  local diary_cfg = config.diary
   local today = os.date(diary_cfg.date_format)
   local ext = state.markdown_extension or ".md"
-  local diary_path = util.join_path(diary_dir, today .. ext)
+  local diary_path = util.join_path(entries_dir, today .. ext)
   local created = false
   if vim.fn.filereadable(diary_path) == 0 then
     local ok, err = pcall(function()
@@ -142,11 +148,11 @@ end
 -- Opens or creates the diary index file.
 --
 M.open_index = function()
-  local diary_dir, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
+  local diary_dir, _, wiki_root, active_wiki_path, ultimate_wiki_root = get_diary_dir()
   if not diary_dir then
     return
   end
-
+  local diary_cfg = config.diary
   local index_path = util.join_path(diary_dir, diary_cfg.index_file)
   if vim.fn.filereadable(index_path) == 0 then
     local ok, err = pcall(function()
@@ -171,13 +177,13 @@ end
 -- Internal function used by a headless job to collect diary entry metadata.
 -- It prints a JSON array of {y, m, d} tables to stdout.
 --
-M._collect_entries = function(dir, ext, date_fmt)
+M._collect_entries = function(dir, ext, date_fmt, index_file)
   local pattern, order = fmt_to_pattern(date_fmt)
   local files = finder.find_wiki_pages(dir, ext)
   local results = {}
   for _, file in ipairs(files or {}) do
     local fname = vim.fn.fnamemodify(file, ":t")
-    if fname ~= diary_cfg.index_file then
+    if fname ~= index_file then
       local stem = vim.fn.fnamemodify(file, ":t:r")
       local caps = { stem:match(pattern) }
       if #caps == #order then
@@ -220,7 +226,7 @@ end
 -- File discovery and parsing are run in a background job.
 --
 M.update_index = function()
-  local diary_dir = get_diary_dir()
+  local diary_dir, entries_dir = get_diary_dir()
   if not diary_dir then
     return
   end
@@ -229,6 +235,7 @@ M.update_index = function()
     return
   end
 
+  local diary_cfg = config.diary
   local ext = state.markdown_extension or ".md"
   local runtime_root = vim.fn.fnamemodify(debug.getinfo(1, "S").source:sub(2), ":p:h:h:h:h")
   local cmd = {
@@ -240,10 +247,11 @@ M.update_index = function()
     "set rtp+=" .. runtime_root,
     "-c",
     string.format(
-      "lua require('neowiki.features.diary')._collect_entries(%q, %q, %q)",
-      diary_dir,
+      "lua require('neowiki.features.diary')._collect_entries(%q, %q, %q, %q)",
+      entries_dir,
       ext,
-      diary_cfg.date_format
+      diary_cfg.date_format,
+      diary_cfg.index_file
     ),
     "-c",
     "qa!",
@@ -322,7 +330,11 @@ M.update_index = function()
             for _, day_num in ipairs(days) do
               local day = string.format("%02d", day_num)
               local date_str = format_from_parts(diary_cfg.date_format, year, month, day)
-              local link = string.format("[%s](./%s%s)", date_str, date_str, ext)
+              local prefix = diary_cfg.entries_rel_path
+                  and diary_cfg.entries_rel_path ~= ""
+                  and (diary_cfg.entries_rel_path:gsub("/$", "") .. "/")
+                or ""
+              local link = string.format("[%s](./%s%s%s)", date_str, prefix, date_str, ext)
               table.insert(lines, "- " .. link)
             end
             table.insert(lines, "")
