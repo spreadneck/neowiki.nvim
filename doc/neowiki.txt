@@ -163,8 +163,11 @@ require("neowiki").setup({
 
   -- Configuration for the diary functionality.
   diary = {
-    -- Subdirectory (relative to the wiki's parent directory) where diary entries are stored.
+    -- Subdirectory (relative to the wiki's parent directory) where diary files are stored.
     rel_path = "diary",
+    -- Optional subdirectory within `rel_path` where diary entries live.
+    -- If nil or empty, entries are stored directly in `rel_path`.
+    entries_rel_path = nil,
     index_file = "diary.md",
     header = "Diary",
     date_format = "%Y-%m-%d",
@@ -325,7 +328,8 @@ Regenerates the diary index by scanning existing diary pages.
 
 The diary feature provides quick access to daily notes and an index of past
 entries. Diary files reside in a sibling `diary/` directory next to your wiki
-content (e.g. `personal/wiki` and `personal/diary`).
+content (e.g. `personal/wiki` and `personal/diary`). Entries can optionally
+be placed in a subdirectory (e.g. `diary/posts`) via `diary.entries_rel_path`.
 
 New entries begin with a first-level header containing the current date. The
 format can be configured via `diary.entry_header_format`.
@@ -338,8 +342,11 @@ Mappings:
 Configuration:
 >lua
   diary = {
-    -- Subdirectory (relative to the wiki's parent directory) where diary entries are stored.
+    -- Subdirectory (relative to the wiki's parent directory) where diary files are stored.
     rel_path = "diary",
+    -- Optional subdirectory within `rel_path` where diary entries live.
+    -- If nil or empty, entries are stored directly in `rel_path`.
+    entries_rel_path = nil,
     index_file = "diary.md",
     header = "Diary",
     date_format = "%Y-%m-%d",

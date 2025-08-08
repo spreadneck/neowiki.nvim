@@ -27,8 +27,11 @@ local config = {
 
   -- Configuration for the diary functionality.
   diary = {
-    -- Subdirectory (relative to the wiki's parent directory) where diary entries are stored.
+    -- Subdirectory (relative to the wiki's parent directory) where diary files are stored.
     rel_path = "diary",
+    -- Optional subdirectory within `rel_path` where diary entries are stored.
+    -- If nil or empty, entries are kept directly in `rel_path`.
+    entries_rel_path = nil,
     -- Name of the diary index file.
     index_file = "diary.md",
     -- Header used for the diary index file.

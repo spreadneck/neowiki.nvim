@@ -29,7 +29,8 @@
 - **Diary Notes** 📅
   Jump to today's entry, browse an index, or regenerate it with dedicated diary commands. Optionally auto-update the diary index when creating new entries via `diary.auto_update_index`.
   
-  Diary files live in a sibling `diary/` directory alongside your wiki (e.g. `personal/wiki` and `personal/diary`).
+  Diary files live in a sibling `diary/` directory alongside your wiki (e.g. `personal/wiki` and `personal/diary`). Entries may
+  be placed in a subdirectory like `diary/posts` using `diary.entries_rel_path`.
   
   Daily files are seeded from a template via `diary.entry_template`. String templates are processed by `os.date` so you can embed the current date. If unset, a simple header using `diary.entry_header_format` is inserted.
 
@@ -172,8 +173,11 @@ require("neowiki").setup({
 
   -- Configuration for the diary functionality.
   diary = {
-    -- Subdirectory (relative to the wiki's parent directory) where diary entries are stored.
+    -- Subdirectory (relative to the wiki's parent directory) where diary files are stored.
     rel_path = "diary",
+    -- Optional subdirectory within `rel_path` for diary entries.
+    -- If nil or empty, entries are kept directly in `rel_path`.
+    entries_rel_path = nil,
     index_file = "diary.md",
     header = "Diary",
     date_format = "%Y-%m-%d",
