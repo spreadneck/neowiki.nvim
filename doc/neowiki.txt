@@ -361,13 +361,19 @@ Configuration:
     -- Optional subdirectory within `rel_path` where diary entries live.
     -- If nil or empty, entries are stored directly in `rel_path`.
     entries_rel_path = nil,
+    -- Directory (relative to the wiki root's parent) containing template files.
+    template_dir = nil,
+    -- Template filename for new diary entries located inside `template_dir`.
+    entry_template_file = nil,
     index_file = "diary.md",
     header = "Diary",
     date_format = "%Y-%m-%d",
     entry_header_format = "%a %b %d %Y",
+    -- Optional template for new entries. Strings use os.date() for placeholders.
     entry_template = nil,
     template_dir = "templates",
     entry_template_file = "diary.md",
+    -- Automatically update the diary index after creating a new entry.
     auto_update_index = false,
   }
 <
