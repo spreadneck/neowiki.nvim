@@ -60,7 +60,7 @@ Requires **Neovim >= 0.10**. For the best experience, install Treesitter’s `ma
     wiki_dirs = {
       -- neowiki.nvim supports both absolute and tilde-expanded paths
       { name = "Work", path = "~/work/wiki" },
-      { name = "Personal", path = "personal/wiki" },
+      { name = "Personal", path = "~/personal/wiki" },
     },
   },
   keys = {
@@ -88,6 +88,41 @@ lua vim.keymap.set("n", "<leader>ww", require("neowiki").open_wiki, { desc = "Op
 lua vim.keymap.set("n", "<leader>wW", require("neowiki").open_wiki_floating, { desc = "Open Floating Wiki" })
 lua vim.keymap.set("n", "<leader>wT", require("neowiki").open_wiki_new_tab, { desc = "Open Wiki in Tab" })
 ```
+
+## 📁 Directory Layout
+
+Each wiki root expects a simple structure:
+
+```
+wiki/
+├── index.md     # Markdown notes and wiki index
+├── diary/       # Daily entries (optional)
+└── templates/   # Reusable snippets for new pages
+```
+
+Configure the directories with `template_dir` and `diary.entry_template_file`:
+
+```lua
+require("neowiki").setup({
+  wiki_dirs = {
+    { name = "Personal", path = "~/wiki" },
+  },
+  template_dir = "templates", -- inside the wiki root
+  diary = {
+    entry_template_file = "diary.md", -- relative to template_dir
+  },
+})
+```
+
+Placeholders in template strings or files follow `os.date`'s `%`-style format. For example, a `templates/diary.md` like:
+
+```
+# %Y-%m-%d
+Agenda for %A
+```
+
+will expand to a dated header and weekday name when creating a new entry. Advanced templating engines (e.g. Jinja2) are not
+included and would require extra setup if adopted later.
 
 ## 🚀 Optional Dependencies
 
@@ -165,13 +200,17 @@ require("neowiki").setup({
   -- If this is nil, the plugin defaults to `~/wiki`.
   -- Example:
   -- wiki_dirs = {
-  --   { name = "Work", path = "~/Documents/work-wiki" },
-  --   { name = "Personal", path = "personal-wiki" },
+  --   { name = "Work", path = "~/Documents/work/wiki" },
+  --   { name = "Personal", path = "~/personal/wiki" },
   -- }
   wiki_dirs = nil,
 
   -- The filename for a wiki's index page (e.g., "index.md").
   index_file = "index.md",
+
+  -- Directory (relative to the wiki's parent directory) containing template files.
+  -- Used with `diary.entry_template_file`.
+  template_dir = "templates",
 
   -- Automatically discover and register nested wiki roots.
   discover_nested_roots = false,
