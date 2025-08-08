@@ -32,6 +32,10 @@ local config = {
     -- Optional subdirectory within `rel_path` where diary entries are stored.
     -- If nil or empty, entries are kept directly in `rel_path`.
     entries_rel_path = nil,
+    -- Directory (relative to the wiki root's parent) containing template files.
+    template_dir = nil,
+    -- Template filename for new diary entries located inside `template_dir`.
+    entry_template_file = nil,
     -- Name of the diary index file.
     index_file = "diary.md",
     -- Header used for the diary index file.

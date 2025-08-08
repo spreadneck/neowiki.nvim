@@ -107,6 +107,11 @@ M.open_today = function()
     return
   end
   local diary_cfg = config.diary
+  local parent = vim.fn.fnamemodify(wiki_root, ":h")
+  local template_path
+  if diary_cfg.template_dir and diary_cfg.entry_template_file then
+    template_path = util.join_path(parent, diary_cfg.template_dir, diary_cfg.entry_template_file)
+  end
   local today = os.date(diary_cfg.date_format)
   local ext = state.markdown_extension or ".md"
   local diary_path = util.join_path(entries_dir, today .. ext)
@@ -115,7 +120,12 @@ M.open_today = function()
     local ok, err = pcall(function()
       local f = assert(io.open(diary_path, "w"), "Failed to create diary file.")
       local content
-      if type(diary_cfg.entry_template) == "function" then
+      if template_path and vim.fn.filereadable(template_path) == 1 then
+        local tf = assert(io.open(template_path, "r"), "Failed to read diary template file.")
+        local tmpl = tf:read("*a")
+        tf:close()
+        content = os.date(tmpl)
+      elseif type(diary_cfg.entry_template) == "function" then
         content = diary_cfg.entry_template()
       elseif type(diary_cfg.entry_template) == "string" then
         content = os.date(diary_cfg.entry_template)
