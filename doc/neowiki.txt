@@ -172,6 +172,15 @@ require("neowiki").setup({
     header = "Diary",
     date_format = "%Y-%m-%d",
     entry_header_format = "%a %b %d %Y",
+    -- Template for new diary entries. Strings are processed with os.date().
+    entry_template = nil,
+    -- Directory containing diary templates. Resolved relative to each
+    -- wiki's root (sibling to the docs directory).
+    template_dir = "templates",
+    -- Template file used for diary entries, found inside `template_dir`.
+    entry_template_file = "diary.md",
+    -- Automatically update the diary index after creating a new entry.
+    auto_update_index = false,
   },
 
   -- Defines the keymaps used by neowiki.
@@ -334,6 +343,11 @@ be placed in a subdirectory (e.g. `diary/posts`) via `diary.entries_rel_path`.
 New entries begin with a first-level header containing the current date. The
 format can be configured via `diary.entry_header_format`.
 
+Templates for new entries may come from `diary.entry_template` or from the
+file specified by `diary.entry_template_file` within `diary.template_dir`. Both
+paths are resolved relative to the wiki root, making the template directory a
+sibling of the docs directory.
+
 Mappings:
 - `<leader>w<leader>w` — open or create today's diary entry
 - `<leader>wi` — open the diary index
@@ -357,6 +371,8 @@ Configuration:
     entry_header_format = "%a %b %d %Y",
     -- Optional template for new entries. Strings use os.date() for placeholders.
     entry_template = nil,
+    template_dir = "templates",
+    entry_template_file = "diary.md",
     -- Automatically update the diary index after creating a new entry.
     auto_update_index = false,
   }

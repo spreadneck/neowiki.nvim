@@ -48,6 +48,12 @@ local config = {
     -- Can also be a function returning a string.
     -- Defaults to a header based on entry_header_format.
     entry_template = nil,
+    -- Directory containing diary templates. Resolved relative to each
+    -- wiki's root (i.e., as a sibling to the docs directory).
+    template_dir = "templates",
+    -- File within `template_dir` used when creating new diary entries.
+    -- The path is resolved relative to the wiki root.
+    entry_template_file = "diary.md",
     -- Automatically update the diary index after creating a new entry.
     auto_update_index = false,
   },
