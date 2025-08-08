@@ -31,8 +31,13 @@
   
   Diary files live in a sibling `diary/` directory alongside your wiki (e.g. `personal/wiki` and `personal/diary`). Entries may
   be placed in a subdirectory like `diary/posts` using `diary.entries_rel_path`.
-  
-  Daily files are seeded from a template via `diary.entry_template`. String templates are processed by `os.date` so you can embed the current date. If unset, a simple header using `diary.entry_header_format` is inserted.
+
+  Daily files are seeded from a template via `diary.entry_template` or from
+  `diary.entry_template_file` inside `diary.template_dir` (both resolved
+  relative to the wiki root, as siblings of the docs directory). String
+  templates are processed by `os.date` so you can embed the current date. If no
+  template is found, a simple header using `diary.entry_header_format` is
+  inserted.
 
 - **Neovim-Powered Efficiency** ⚙️  
   Built for Neovim 0.10+, leveraging Lua for speed and seamless integration with Treesitter, markdown rendering, completion, pickers, and your existing setup.
@@ -184,6 +189,11 @@ require("neowiki").setup({
     entry_header_format = "%a %b %d %Y", -- used when entry_template is nil
     -- Optional template for new entries. Strings use os.date() for placeholders.
     entry_template = nil,
+    -- Directory containing diary templates. Resolved relative to each
+    -- wiki's root (a sibling to the docs directory).
+    template_dir = "templates",
+    -- Template file used for diary entries, located inside `template_dir`.
+    entry_template_file = "diary.md",
     -- Automatically update the diary index after creating a new entry.
     auto_update_index = false,
   },
