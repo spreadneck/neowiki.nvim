@@ -29,12 +29,15 @@
 - **Diary Notes** 📅
   Jump to today's entry, browse an index, or regenerate it with dedicated diary commands. Optionally auto-update the diary index when creating new entries via `diary.auto_update_index`.
   
-  Diary files live in a `diary/` directory within the wiki root. Entries may be placed in a subdirectory like `diary/posts`
-  using `diary.entries_rel_path`.
+  Diary files live in a sibling `diary/` directory alongside your wiki (e.g. `personal/wiki` and `personal/diary`). Entries may
+  be placed in a subdirectory like `diary/posts` using `diary.entries_rel_path`.
 
-  Daily files are seeded from a template via `diary.entry_template` or `diary.entry_template_file` inside a sibling
-  `templates/` directory. Both string templates and template files are processed by `os.date`, so placeholders like `%Y` or `%m`
-  are replaced with the current date. If unset, a simple header using `diary.entry_header_format` is inserted.
+  Daily files are seeded from a template via `diary.entry_template` or from
+  `diary.entry_template_file` inside `diary.template_dir` (both resolved
+  relative to the wiki root, as siblings of the docs directory). String
+  templates are processed by `os.date` so you can embed the current date. If no
+  template is found, a simple header using `diary.entry_header_format` is
+  inserted.
 
 - **Neovim-Powered Efficiency** ⚙️  
   Built for Neovim 0.10+, leveraging Lua for speed and seamless integration with Treesitter, markdown rendering, completion, pickers, and your existing setup.
@@ -219,14 +222,21 @@ require("neowiki").setup({
     -- Optional subdirectory within `rel_path` for diary entries.
     -- If nil or empty, entries are kept directly in `rel_path`.
     entries_rel_path = nil,
+    -- Directory (relative to the wiki root's parent) containing template files.
+    template_dir = nil,
+    -- Template filename for new diary entries located inside `template_dir`.
+    entry_template_file = nil,
     index_file = "diary.md",
     header = "Diary",
     date_format = "%Y-%m-%d",
     entry_header_format = "%a %b %d %Y", -- used when entry_template is nil
     -- Optional template for new entries. Strings use os.date() for placeholders.
     entry_template = nil,
-    -- Alternatively, load the template from a file in `template_dir`.
-    entry_template_file = nil,
+    -- Directory containing diary templates. Resolved relative to each
+    -- wiki's root (a sibling to the docs directory).
+    template_dir = "templates",
+    -- Template file used for diary entries, located inside `template_dir`.
+    entry_template_file = "diary.md",
     -- Automatically update the diary index after creating a new entry.
     auto_update_index = false,
   },
