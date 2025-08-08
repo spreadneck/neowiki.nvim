@@ -178,6 +178,10 @@ require("neowiki").setup({
     -- Optional subdirectory within `rel_path` for diary entries.
     -- If nil or empty, entries are kept directly in `rel_path`.
     entries_rel_path = nil,
+    -- Directory (relative to the wiki root's parent) containing template files.
+    template_dir = nil,
+    -- Template filename for new diary entries located inside `template_dir`.
+    entry_template_file = nil,
     index_file = "diary.md",
     header = "Diary",
     date_format = "%Y-%m-%d",
